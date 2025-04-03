@@ -1,4 +1,4 @@
-#!/bin/bash
+
 
 # === CONFIG ===
 GIT_USER="skip6999"
@@ -46,16 +46,20 @@ fi
 
 # Drop a default README if it doesn't exist
 if [ ! -f "README.md" ]; then
-    cat <<EOL > README.md
-# \$REPO_NAME
+    cat <<
 
-This project is auto-deployed using a Git-powered bash script from \`$PROJECT_PATH\`.
+![GitHub Repo stars](https://img.shields.io/github/stars/$GIT_USER/$REPO_NAME?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/$GIT_USER/$REPO_NAME)
+![GitHub license](https://img.shields.io/github/license/$GIT_USER/$REPO_NAME)
+EOF > README.md
+# $REPO_NAME
 
-🛠️ Managed by: \$GIT_USER  
-🚀 Pushed with love and coffee.  
-🗓️ Initialized on: \$(date '+%Y-%m-%d')
+This project is auto-deployed using a Git-powered bash script from `$PROJECT_PATH`.
 
-EOL
+🛠️ Managed by: $GIT_USER
+🚀 Pushed with love and coffee.
+🗓️ Initialized on: $(date '+%Y-%m-%d')
+EOF
     echo "📘 Created default README.md"
 fi
 
@@ -85,9 +89,15 @@ fi
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 echo "[$TIMESTAMP] $COMMIT_MSG pushed to $REPO_NAME on branch main" >> "$LOG_FILE"
 
+# Create or update CHANGELOG.md
+CHANGELOG_FILE="$PROJECT_PATH/CHANGELOG.md"
+LATEST_HASH=$(git rev-parse --short HEAD)
+echo -e "## $(date '+%Y-%m-%d')
+- Commit: $LATEST_HASH - $COMMIT_MSG" >> "$CHANGELOG_FILE"
+echo "📝 CHANGELOG updated"
+
 # Victory message
 echo -e "🖖 Logical push complete, Captain.\n🗂️ Push log saved to $LOG_FILE\n🚀 Project live at: https://github.com/$GIT_USER/$REPO_NAME"
 
 # Hold terminal open (optional for GUI users)
 read -p "👀 Press enter to close..."
-
