@@ -1,0 +1,6 @@
+Django>=3.2,<4.0
+gunicorn  # For WSGI
+uvicorn[gunicorn]  # For ASGI (if needed)
+psycopg2-binary  # PostgreSQL adapter
+django-environ  # For environment variables
+requests # for making http requests to ollama

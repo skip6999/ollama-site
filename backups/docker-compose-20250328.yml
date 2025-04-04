@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+
+  # Django Web App
+  django:
+    build: ./django
+    container_name: django_app
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/dbname
+      - VIRTUAL_HOST=ericjensen.cam,www.ericjensen.cam
+      - VIRTUAL_PORT=8000
+      - LETSENCRYPT_HOST=ericjensen.cam,www.ericjensen.cam
+      - LETSENCRYPT_EMAIL=skippy5439812@gmail.com
+    volumes:
+      - ./django:/app
+    working_dir: /app
+    command: bash -c "pip install -r requirements.txt && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    networks:
+      - app_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: jwilder/nginx-proxy
+    container_name: nginx_reverse_proxy
+    environment:
+      - DEFAULT_HOST=default.local
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+      # - "443:443"
+    depends_on:
+      - django
+      - ollama
+    networks:
+      - app_network
+
+  # Nginx Certbot Companion
+  nginx_certbot:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx_certbot
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx_reverse_proxy
+      - DEFAULT_EMAIL=skippy5439812@gmail.com
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./nginx/html:/usr/share/nginx/html
+    depends_on:
+      - nginx
+    networks:
+      - app_network
+
+  # Ollama Model Service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_model
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    expose:
+      - "5000"
+    networks:
+      - app_network
+
+  # Certbot (Auto Renew Only – optional)
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    environment:
+      - CERTBOT_EMAIL=skippy5439812@gmail.com
+      - CERTBOT_DOMAINS=ericjensen.cam,www.ericjensen.cam
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - app_network
+
+  # PostgreSQL Database
+  db:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      - POSTGRES_DB=ollama_db
+      - POSTGRES_USER=ollama_admin
+      - POSTGRES_PASSWORD=ultraSecret123
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+

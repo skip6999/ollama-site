@@ -1,0 +1,9 @@
+*.bak
+*.log
+__pycache__/
+.env
+certs/
+ollama-backups/
+*.tar.gz
+*.sh~*
+.DS_Store

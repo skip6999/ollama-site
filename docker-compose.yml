@@ -1,0 +1,61 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certs:/etc/letsencrypt:ro
+      - ./static:/static
+    depends_on:
+      - django_app
+      - ollama_model
+    networks:
+      - ollama_net
+
+  django_app:
+    build: ./django
+    container_name: django_app
+    expose:
+      - "8000"
+    volumes:
+      - ./chat:/app/chat
+      - ./static:/app/static
+    networks:
+      - ollama_net
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  ollama_model:
+    image: ollama/ollama:latest
+    container_name: ollama_model
+    ports:
+      - "18181:11434"
+    networks:
+      - ollama_net
+
+  postgres_db:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ollama_db
+      POSTGRES_USER: ollama_user
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ollama_net
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+volumes:
+  postgres_data:
+
+networks:
+  ollama_net:
+    driver: bridge
+
