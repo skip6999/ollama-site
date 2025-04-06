@@ -36,6 +36,9 @@ services:
       - "18181:11434"
     networks:
       - ollama_net
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=1  # Use only Quadro RTX 4000
 
   postgres_db:
     image: postgres:latest
