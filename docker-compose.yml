@@ -38,7 +38,11 @@ services:
       - ollama_net
     runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=1  # Use only Quadro RTX 4000
+      - NVIDIA_VISIBLE_DEVICES=1
+    volumes:
+      - ./start-ultra.sh:/start-ultra.sh
+      - /media/jnsn549/02f42e69-22a7-492d-9d5c-6642e86ab069/UltraAI/models:/root/.ollama
+    entrypoint: ["/bin/bash", "/start-ultra.sh"]
 
   postgres_db:
     image: postgres:latest
@@ -54,7 +58,6 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
-
 volumes:
   postgres_data:
 
